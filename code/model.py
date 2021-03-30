@@ -16,7 +16,7 @@ class GLU(nn.Module):
         nc = x.size(1)
         assert nc % 2 == 0, 'channels dont divide 2!'
         nc = int(nc/2)
-        return x[:, :nc] * F.sigmoid(x[:, nc:])
+        return x[:, :nc] * torch.sigmoid(x[:, nc:])
 
 
 def conv3x3(in_planes, out_planes):
@@ -188,8 +188,8 @@ class G_NET(nn.Module):
         super(G_NET, self).__init__()
         self.gf_dim = cfg.GAN.GF_DIM
         self.define_module()
-        self.upsampling = Upsample(scale_factor=2, mode = 'bilinear')
-        self.scale_fimg = nn.UpsamplingBilinear2d(size = [62, 62])
+        self.upsampling = Upsample(scale_factor = 2, mode = 'bilinear')
+        self.scale_fimg = nn.UpsamplingBilinear2d(size = [126, 126])
 
     def define_module(self):
 
@@ -332,26 +332,28 @@ class D_NET(nn.Module):
     def define_module(self):
         ndf = self.df_dim
         efg = self.ef_dim
+
         if self.stg_no == 0:
             self.patchgan_img_code_s16 = encode_background_img(ndf)
             self.uncond_logits1 = nn.Sequential(
-            nn.Conv2d(ndf * 2, 1, kernel_size=4, stride=1),
+            nn.Conv2d(ndf * 4, 1, kernel_size=4, stride=1),
             nn.Sigmoid())
             self.uncond_logits2 = nn.Sequential(
-            nn.Conv2d(ndf * 2, 1, kernel_size=4, stride=1),
+            nn.Conv2d(ndf * 4, 1, kernel_size=4, stride=1),
             nn.Sigmoid())
+
         else:
             self.img_code_s16 = encode_parent_and_child_img(ndf)
-            self.img_code_s32 = downBlock(ndf * 4, ndf * 8)
-            self.img_code_s32_1 = Block3x3_leakRelu(ndf * 8, ndf * 4)
+            self.img_code_s32 = downBlock(ndf * 8, ndf * 16)
+            self.img_code_s32_1 = Block3x3_leakRelu(ndf * 16, ndf * 8)
 
-            self.logits = nn.Sequential(
-                nn.Conv2d(ndf * 4, efg, kernel_size=4, stride=4))
+            self.logits = nn.Sequential(nn.Conv2d(ndf * 8, efg, kernel_size=4, stride=4))
 
-            self.jointConv = Block3x3_leakRelu(ndf * 4, ndf * 4)
+            self.jointConv = Block3x3_leakRelu(ndf * 8, ndf * 8)
             self.uncond_logits = nn.Sequential(
-            nn.Conv2d(ndf * 4, 1, kernel_size=4, stride=4),
+            nn.Conv2d(ndf * 8, 1, kernel_size=4, stride=4),
             nn.Sigmoid())
+
 
 
     def forward(self, x_var):

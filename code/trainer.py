@@ -44,12 +44,12 @@ def child_to_parent(child_c_code, classes_child, classes_parent):
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
-        nn.init.orthogonal(m.weight.data, 1.0)
+        nn.init.orthogonal_(m.weight.data, 1.0)
     elif classname.find('BatchNorm') != -1:
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
     elif classname.find('Linear') != -1:
-        nn.init.orthogonal(m.weight.data, 1.0)
+        nn.init.orthogonal_(m.weight.data, 1.0)
         if m.bias is not None:
             m.bias.data.fill_(0.0)
 
@@ -67,7 +67,7 @@ def load_network(gpus):
     netG = G_NET()
     netG.apply(weights_init)
     netG = torch.nn.DataParallel(netG, device_ids=gpus)
-    print(netG)
+    # print(netG)
 
     netsD = []
     for i in range(3): # 3 discriminators for background, parent and child stage
@@ -243,6 +243,7 @@ class FineGAN_trainer(object):
             if idx == 2:
                 fake_labels = torch.zeros_like(real_logits[1])
                 real_labels = torch.ones_like(real_logits[1])
+
             elif idx == 0:
                 fake_labels = torch.zeros_like(real_logits[1])
                 ext, output = real_logits
@@ -250,18 +251,18 @@ class FineGAN_trainer(object):
                 real_labels = torch.ones_like(output)
 
                 for i in range(batch_size):
-                        x1 =  self.warped_bbox[0][i]
-                        x2 =  self.warped_bbox[2][i]
-                        y1 =  self.warped_bbox[1][i]
-                        y2 =  self.warped_bbox[3][i]
+                    x1 =  self.warped_bbox[0][i]
+                    x2 =  self.warped_bbox[2][i]
+                    y1 =  self.warped_bbox[1][i]
+                    y2 =  self.warped_bbox[3][i]
 
-                        a1 = max(torch.tensor(0).float().cuda(), torch.ceil((x1 - self.recp_field)/self.patch_stride))
-                        a2 = min(torch.tensor(self.n_out - 1).float().cuda(), torch.floor((self.n_out - 1) - ((126 - self.recp_field) - x2)/self.patch_stride)) + 1
-                        b1 = max(torch.tensor(0).float().cuda(), torch.ceil((y1 - self.recp_field)/self.patch_stride))
-                        b2 = min(torch.tensor(self.n_out - 1).float().cuda(), torch.floor((self.n_out - 1) - ((126 - self.recp_field) - y2)/self.patch_stride)) + 1
+                    a1 = max(torch.tensor(0).float().cuda(), torch.ceil((x1 - self.recp_field)/self.patch_stride))
+                    a2 = min(torch.tensor(self.n_out - 1).float().cuda(), torch.floor((self.n_out - 1) - ((126 - self.recp_field) - x2)/self.patch_stride)) + 1
+                    b1 = max(torch.tensor(0).float().cuda(), torch.ceil((y1 - self.recp_field)/self.patch_stride))
+                    b2 = min(torch.tensor(self.n_out - 1).float().cuda(), torch.floor((self.n_out - 1) - ((126 - self.recp_field) - y2)/self.patch_stride)) + 1
 
-                        if (x1 != x2 and y1 != y2):
-                                weights_real[i, :, a1.type(torch.int) : a2.type(torch.int) , b1.type(torch.int) : b2.type(torch.int)] = 0.0
+                    if (x1 != x2 and y1 != y2):
+                        weights_real[i, :, a1.type(torch.int) : a2.type(torch.int) , b1.type(torch.int) : b2.type(torch.int)] = 0.0
 
                 norm_fact_real = weights_real.sum()
                 norm_fact_fake = weights_real.shape[0]*weights_real.shape[1]*weights_real.shape[2]*weights_real.shape[3]
