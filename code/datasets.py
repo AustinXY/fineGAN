@@ -61,7 +61,7 @@ def get_imgs(img_path, imsize, bbox=None,
 
     retf = []
     retc = []
-    re_cimg = transforms.Scale(64)(cimg)
+    re_cimg = transforms.Scale(imsize[1])(cimg)
     retc.append(normalize(re_cimg))
 
     # We use full image to get background patches
@@ -69,7 +69,7 @@ def get_imgs(img_path, imsize, bbox=None,
     # We resize the full image to be 126 X 126 (instead of 128 X 128)  for the full coverage of the input (full) image by
     # the receptive fields of the final convolution layer of background discriminator
 
-    my_crop_width = 62
+    my_crop_width = 126
     re_fimg = transforms.Scale(int(my_crop_width * 76 / 64))(fimg)
     re_width, re_height = re_fimg.size
 
@@ -163,7 +163,7 @@ class Dataset(data.Dataset):
         df_filenames = \
             pd.read_csv(filepath, delim_whitespace=True, header=None)
         filenames = df_filenames[1].tolist()
-        filenames =  [fname[:-4] for fname in filenames];
+        filenames =  [fname[:-4] for fname in filenames]
         print('Load filenames from: %s (%d)' % (filepath, len(filenames)))
         return filenames
 

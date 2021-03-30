@@ -1,12 +1,12 @@
 CONFIG_NAME: '3stages'
-DATASET_NAME: 'birds'
-DATA_DIR: '../../data/birds'
+DATASET_NAME: 'lsuncar'
+DATA_DIR: '../../data/LSUNCAR100k'
 SAVE_DIR: '../output/vis'
 GPU_ID: '0'
 WORKERS: 4
 
-SUPER_CATEGORIES: 20   # For CUB
-FINE_GRAINED_CATEGORIES: 200  # For CUB
+SUPER_CATEGORIES: 40   # For CUB
+FINE_GRAINED_CATEGORIES: 500  # For CUB
 TIED_CODES: True   # Do NOT change this to False during training.
 
 TREE:
