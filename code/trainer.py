@@ -4,7 +4,7 @@ import sys
 import numpy as np
 import os
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 import random
 import time
@@ -133,12 +133,12 @@ def define_optimizers(netG, netsD):
 def save_model(netG, avg_param_G, netsD, epoch, model_dir):
     load_params(netG, avg_param_G)
     torch.save(
-        netG.state_dict(),
+        netG.module.state_dict(),
         '%s/netG_%d.pth' % (model_dir, epoch))
     for i in range(len(netsD)):
         netD = netsD[i]
         torch.save(
-            netD.state_dict(),
+            netD.module.state_dict(),
             '%s/netD%d.pth' % (model_dir, i))
     print('Save G/Ds models.')
 
@@ -539,7 +539,7 @@ class FineGAN_trainer(object):
 
             end_t = time.time()
 
-            if (count % 100) == 0:
+            if count % 100 == 0:
                 print('''[%d/%d][%d]
                              Loss_D: %.2f Loss_G: %.2f Time: %.2fs
                           '''
@@ -547,7 +547,7 @@ class FineGAN_trainer(object):
                          errD_total.item(), errG_total.item(),
                          end_t - start_t))
 
-            if (count == cfg.TRAIN.HARDNEG_MAX_ITER): # Hard negative training complete
+            if count == cfg.TRAIN.HARDNEG_MAX_ITER: # Hard negative training complete
                     break
 
         save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
@@ -581,7 +581,7 @@ class FineGAN_evaluator(object):
 
             state_dict = \
                 torch.load(cfg.TRAIN.NET_G,
-                           map_location=lambda storage, loc: storage)
+                           map_location=lambda storage, loc: storage)['birds128']
 
             state_dict = {k: v for k, v in state_dict.items() if k in model_dict}
 
@@ -590,7 +590,9 @@ class FineGAN_evaluator(object):
             print('Load ', cfg.TRAIN.NET_G)
 
             # Uncomment this to print Generator layers
-            # print(netG)
+            print(netG)
+
+            sys
 
             nz = cfg.GAN.Z_DIM
             noise = torch.FloatTensor(self.batch_size, nz)
